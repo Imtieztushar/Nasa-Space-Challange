@@ -1,0 +1,41 @@
+#include <DHT.h>
+#define DHTPIN 4          // DHT22 data pin connected to GPIO 4
+#define DHTTYPE DHT22     // DHT 22 sensor type
+#define RELAY_PIN 5       // Relay module pin connected to GPIO 5
+#define PELTIER_THRESHOLD_HIGH 27.0 // High temperature threshold to activate cooling
+#define PELTIER_THRESHOLD_LOW 22.0  // Low temperature threshold to deactivate cooling
+DHT dht(DHTPIN, DHTTYPE);  // Initialize DHT sensor
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  // Set relay pin as output
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);  // Initially, keep the relay off
+}
+void loop() {
+  // Read temperature and humidity values
+  float temp = dht.readTemperature();
+  float humidity = dht.readHumidity();
+  // Check if the sensor data is valid
+  if (isnan(temp) || isnan(humidity)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+  // Display temperature and humidity on the serial monitor
+  Serial.print("Temperature: ");
+  Serial.print(temp);
+  Serial.print(" °C, Humidity: ");
+  Serial.print(humidity);
+  Serial.println(" %");
+  // Control the relay based on the temperature
+  if (temp > PELTIER_THRESHOLD_HIGH) {
+    // If temperature exceeds the high threshold, turn on the Peltier module via the relay
+    digitalWrite(RELAY_PIN, HIGH);
+    Serial.println("Peltier ON");
+  } else if (temp < PELTIER_THRESHOLD_LOW) {
+    // If temperature drops below the low threshold, turn off the Peltier module
+    digitalWrite(RELAY_PIN, LOW);
+    Serial.println("Peltier OFF");
+  }
+  delay(2000);  // Delay for 2 seconds before the next reading
+}
